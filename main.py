@@ -72,3 +72,13 @@ print(response)
 message = input("Do you want to exit: ")
 if message == "exit":
   print("Goodbye, Have a great day!")
+
+asyncio = call_openai(prompt: str)
+asyncio = call_gemini(prompt: str)
+
+results = await asyncio.gather(
+  call_openai(prompt),
+  call_gemini(prompt),
+  return_exemptions=True
+)
+print(results)
