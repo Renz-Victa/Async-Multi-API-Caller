@@ -4,6 +4,10 @@ from dataclasses import dataclass
 from typing import List
 import json
 from typing import Optional
+import asyncio
+import aiohttp
+import httpx
+from google import genai
 
 class Dataset:
   def __init__(self, data):
@@ -82,3 +86,67 @@ results = await asyncio.gather(
   return_exemptions=True
 )
 print(results)
+
+try:
+  response = response.create(
+    model="gpt-3.5"
+  )
+
+except Exception as e:
+  print(f"LLM API failed: {e}")
+
+try:
+  data = json.loads()
+except json.JSONDecodeError:
+  print("Invalid JSON from the model")
+
+async def fetch_one(client: httpx.AsyncClient, api: int) -> int:
+  response = await client.get(api)
+  response.raise_for_status()
+  return response.text
+
+async def main():
+  apis = [
+    openai_api_key,
+    gemini_api_key
+  ]
+
+  async with httpx.AsyncClient(timeout=10.0) as client:
+    results = await asyncio.gather(*(fetch_one(client)))
+
+  for i, text in enumerate(results, start=1):
+    print(f"Result {i}: {text[:80]}")
+
+asyncio.run(main())
+
+client = genai.Client()
+
+response = client.models.generate_content(
+  model="gemini-3.5-flash",
+  content="Summarize this support ticket in 3 bullets: The user cannot log in after resetting their password."
+)
+
+print(response.text)
+
+async def ask_model(session: aiohttp.ClientSession, prompt: str) -> str:
+  api = "your_api_key"
+  payload = {"prompt": prompt}
+
+  async with session.post(api, json=payload) as response:
+    response.raise_for_status()
+    data = await response.json()
+    return data["text"]
+  
+async def main():
+  prompts = [
+    "Summarise this ticket in one sentence",
+    "Rewrite this paragraph more clearly"
+  ]
+
+  async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
+    results = await asyncio.gather(*(ask_model(session, p) for p in prompts))
+
+  for i, text in enumerate(results, start=1):
+    print(i, text)
+
+asyncio.run(main())
