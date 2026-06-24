@@ -12,6 +12,9 @@ from rich.table import Table
 from rich.live import Live
 from rich.table import Table
 import argparse
+import panel as Panel
+import httpx
+from pydantic import BaseModel, Field
 
 load_dotenv()
 
@@ -108,3 +111,44 @@ with Live(make_table(0, "Pending"), console=console, refresh_per_second=4) as li
 parser = argparse.ArgumentParser()
 parser.add_argument("--model", type=str, default="gpt")
 args = parser.parse_args()
+
+client = OpenAI()
+
+def generate_answer(prompt: str) -> str:
+   response = client.responses.create(
+      model = "gpt-3.5",
+      input = prompt
+   )
+   return response.output_text
+
+def handler(request: httpx.Request) -> httpx.Response:
+   return httpx.Response(
+      200,
+      json={
+         "answer": "Mocked response",
+         "model": "test-model"
+      }
+   )
+
+client = httpx.Client(transport=httpx.MockTransport(handler))
+
+response = client.post(
+   "https://api.example.com/v1/generate",
+   json={"prompt": "What is RAG?"}
+)
+
+print(response.json())
+
+class SupportTicket(BaseModel):
+   issue: str
+   category: str
+   priority: int = Field(ge=1, le=5)
+
+data = {
+   "issue": "Login page not working",
+   "priority": 3,
+   "category": "auth"
+}
+
+ticket = SupportTicket(**data)
+
