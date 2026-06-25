@@ -121,12 +121,12 @@ asyncio.run(main())
 
 client = genai.Client()
 
-response = client.models.generate_content(
-  model="gemini-3.5-flash",
-  content="Summarize this support ticket in 3 bullets: The user cannot log in after resetting their password."
-)
-
-print(response.text)
+def call_genai(prompt: str) -> str:
+  response = client.models.generate_content(
+    model="gemini-3.5-flash",
+    content="Summarize this support ticket in 3 bullets: The user cannot log in after resetting their password."
+  )
+  return response.output_text
 
 async def ask_model(session: aiohttp.ClientSession, prompt: str) -> str:
   api = "your_api_key"

@@ -18,8 +18,6 @@ from pydantic import BaseModel, Field
 
 load_dotenv()
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
 response = client.responses.create(
   model=os.getenv("MODEL_NAME", "gpt-3.5"),
   input="Write a short product description for an AI note-taking app."
@@ -114,9 +112,9 @@ args = parser.parse_args()
 
 client = OpenAI()
 
-def generate_answer(prompt: str) -> str:
+def call_openai(prompt: str, model: str = "gpt-3.5") -> str:
    response = client.responses.create(
-      model = "gpt-3.5",
+      model = model,
       input = prompt
    )
    return response.output_text
@@ -152,3 +150,32 @@ data = {
 
 ticket = SupportTicket(**data)
 
+async def fetch_model_status():
+   async with httpx.AsyncClient(timeout=10.0) as client:
+      response = await client.get("https://api.example.com/status")
+      response.raise_for_students()
+      return response.json()
+   
+async def main():
+   data = await fetch_model_status()
+   return data
+
+asyncio.run(main())
+
+async def call_service(client: httpx.AsyncClient, url: str):
+   response = await client.get(url)
+   response.raise_for_status()
+   return response.json()
+
+async def main():
+   urls = [
+      "https://api.example.com/embeddings/1",
+      "https://api.example.com/embeddings/2"
+   ]
+
+   async with httpx.AsyncClient(timeout=10.0) as client:
+      results = await asyncio.gather(*(call_service(client, url) for url in urls))
+
+   return results
+
+asyncio.run(main())
