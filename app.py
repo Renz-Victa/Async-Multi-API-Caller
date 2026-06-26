@@ -15,6 +15,7 @@ import argparse
 import panel as Panel
 import httpx
 from pydantic import BaseModel, Field
+from typing import Optional
 
 load_dotenv()
 
@@ -40,10 +41,12 @@ async def call_llm(prompt_id):
   print(f"Finished prompt {prompt_id}")
 
 async def main():
-  await asyncio.gather(
-    call_llm(1),
-    call_llm(2)
+  results = await asyncio.gather(
+    call_openai(prompt),
+    call_gemini(prompt),
+    return_exceptions=True
   )
+  print(results)
 
 asyncio.run(main())
 
@@ -109,6 +112,15 @@ with Live(make_table(0, "Pending"), console=console, refresh_per_second=4) as li
 parser = argparse.ArgumentParser()
 parser.add_argument("--model", type=str, default="gpt")
 args = parser.parse_args()
+
+client = Gemini()
+
+def call_gemini(prompt: str) -> str:
+   response = client.responses.create(
+      model = "gemini-flash",
+      input = prompt
+   )
+   return response.output_text
 
 client = OpenAI()
 
@@ -179,3 +191,63 @@ async def main():
    return results
 
 asyncio.run(main())
+
+class LLMResponse(BaseModel):
+   provider: str
+   text: str
+   error: Optional[str] = None
+   latency_ms: int
+   tokens: int
+
+start = time.perf_counter()
+
+response = LLMResponse(
+   provider="openi",
+   text="Approved claim under policty terms",
+   error=None,
+   latency_ms=842,
+   tokens=156
+)
+
+latency_ms = int((time.perf_counter() - start) * 1000)
+
+result = LLMResponse(
+   provider="OpenAI",
+   text=response.output_text,
+   latency_ms=latency_ms
+)
+
+end = time.perf_counter()
+
+print(start - end)
+
+try: 
+   response = client.responses.create(
+      model="gpt-3.5",
+      input = "Summarise thsi claim."
+   )
+
+   result = LLMResponse(
+      provider="OpenAI",
+      text=response.output_text,
+      error=None
+   )
+
+except Exception as e:
+   result = LLMResponse(
+      provider="OpenAI",
+      text="",
+      error=str(e)
+   )
+
+def call_openai(prompt):
+   for attempt in range(3):
+      try:
+         response = client.responses.create(
+            model = "gpt-3.5",
+            input = prompt
+         )
+         return response.output_text
+      except Exception:
+         if attempt == 2:
+            raise
