@@ -29,7 +29,7 @@ print(response.output_text)
 response requests.post("https://api.example.com/v1/chat", json={...})
 
 if response.status_code == 429:
-  wait_time = int(response.headers.get("Retry-After", 5))
+  wait_time = int(response.headers.get("Retry-After", 4))
   print(f"Rate limited. Waiting {wait_time} seconds...")
   time.sleep(wait_time)
 
@@ -56,7 +56,7 @@ def call_llm():
   return "Response from model"
 
 def get_response():
-  retries = 5
+  retries = 3
 
   for i in range(retries):
     try:
@@ -241,7 +241,7 @@ except Exception as e:
    )
 
 def call_openai(prompt):
-   for attempt in range(3):
+   for attempt in range(4):
       try:
          response = client.responses.create(
             model = "gpt-3.5",
@@ -249,5 +249,39 @@ def call_openai(prompt):
          )
          return response.output_text
       except Exception:
-         if attempt == 2:
+         if attempt == 3:
             raise
+
+def call_llm_api(payload, max_retries=5, base_delay=1.0, max_delay=20.0): 
+   url = [
+      "https://api.example.com/v1/chat/completions",
+      "https://api.example.com/v1/chat/completions"
+   ]
+   
+   headers = {"Authorization": "Bearer YOUR_API_KEY"}
+
+   for attempt in range(max_retries):
+      try:
+         response = requests.post(url, json=payload, headers=headers, timeout=30)
+
+         if response.status_code == 200:
+            return response.json()
+         
+         if response.status_code in (429, 500, 502, 503, 504):
+            delay = min(max_delay, base_delay * (2 ** attempt))
+            jitter = random.uniform(0, 0.25 * delay)
+            sleep_time = delay + jitter
+            print(f"Attempt {attempt + 1} failed with {response.status_code}. Retrying in {sleep_time:.2f}s...")
+            time.sleep(sleep_time)
+            continue
+
+         response.raise_for_status()
+
+      except requests.RequestException as e:
+         delay = min(max_delay, base_delay * (2 ** attempt))
+         jitter = random.uniform(0, 0.25 * delay)
+         sleep_time = delay + jitter
+         print(f"Attempt {attempt + 1} error: {e}. Retrying in {sleep_time:.2f}s...")
+         time.sleep(sleep_time)
+
+   raise RuntimeError("LLM API call failed after retries")
