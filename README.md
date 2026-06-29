@@ -11,8 +11,18 @@ Async Multi-API Caller
 ├── main.py
 ├── README.md
 ├── .env.example
+├── results.json          # Log comparisons over time
 ├── .env
-└── .gitignore
+├── .gitignore
+├── compare.py            # Hardcoded test prompt
+├── display.py
+├── requirements.txt
+├── .venv/
+├── clients/
+|   ├── gemini_client.py
+|   ├── openai_client.py
+└── core/
+    └── retry.py
 ```
 
 ---
@@ -21,7 +31,7 @@ Async Multi-API Caller
 
 | Tool     | Version  |
 |----------|----------|
-| Python   | ≥ 3.9    |
+| Python   | ≥ 3.10    |
 | pip      | Latest   |
 
 ---
