@@ -25,6 +25,7 @@ import panel as Panel
 import httpx
 from pydantic import BaseModel, Field
 from typing import Optional
+from google import genai
 
 class Dataset:
   def __init__(self, data):
@@ -94,9 +95,6 @@ message = input("Do you want to exit: ")
 if message == "exit":
   print("Goodbye, Have a great day!")
 
-asyncio = call_openai(prompt: str)
-asyncio = call_gemini(prompt: str)
-
 try:
   data = json.loads()
 except json.JSONDecodeError:
@@ -108,10 +106,10 @@ async def fetch_one(client: httpx.AsyncClient, api: int) -> int:
   return response.text
 
 async def main():
-  apis = [
-    openai_api_key,
-    gemini_api_key
-  ]
+  API = {
+    "openai": os.getenv("OPENAI_API_KEY"),
+    "gemini": os.getenv("GEMINI_API_KEY")
+  }
 
   async with httpx.AsyncClient(timeout=10.0) as client:
     results = await asyncio.gather(*(fetch_one(client)))
@@ -162,7 +160,7 @@ response = client.responses.create(
 
 print(response.output_text)
 
-response requests.post("https://api.example.com/v1/chat", json={...})
+response = requests.post("https://api.example.com/v1/chat", json={...})
 
 if response.status_code == 429:
   wait_time = int(response.headers.get("Retry-After", 4))
@@ -176,7 +174,7 @@ async def call_llm(prompt_id):
 
   print(f"Finished prompt {prompt_id}")
 
-async def main():
+async def main(prompt: str):
   results = await asyncio.gather(
     call_openai(prompt),
     call_gemini(prompt),
@@ -249,7 +247,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--model", type=str, default="gpt")
 args = parser.parse_args()
 
-client = Gemini()
+client = genai.Client(api_key="GEMINI_API_KEY")
 
 def call_gemini(prompt: str) -> str:
    response = client.responses.create(
