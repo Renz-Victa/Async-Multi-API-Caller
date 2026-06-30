@@ -79,12 +79,18 @@ class Message:
   timestamp: str
   content: str=""
 
-model1 = "gpt-3.5"
-model2 = "gemini-flash"
+openai = os.getenv("OPENAI_API_KEY")
+gemini = os.getenv("GEMINI_API_KEY")
+client = openai = gemini
 
-status = f"model {model1} & {model2} has used {tokens_used} so far"
-user1 = input("Do you want the status tokens for these models? y/n: ")
-if int == "y":
+response = client.responses.create(
+  model=os.getenv("MODEL_NAME", "gpt-3.5")
+)
+
+tokens_used = response.usage.total_tokens
+status = f"model {openai} & {gemini} has used {tokens_used} so far"
+user123 = input("Do you want the status tokens for these models? y/n: ")
+if user123 == "y":
   print("status")
 
 user_prompt: str = input("Enter your question: ")
@@ -155,7 +161,7 @@ load_dotenv()
 
 response = client.responses.create(
   model=os.getenv("MODEL_NAME", "gpt-3.5"),
-  input="Write a short product description for an AI note-taking app."
+  input=user_prompt
 )
 
 print(response.output_text)
@@ -247,7 +253,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--model", type=str, default="gpt")
 args = parser.parse_args()
 
-client = genai.Client(api_key="GEMINI_API_KEY")
+client = os.getenv("GEMINI_API_KEY")
 
 def call_gemini(prompt: str) -> str:
    response = client.responses.create(
@@ -256,7 +262,7 @@ def call_gemini(prompt: str) -> str:
    )
    return response.output_text
 
-client = OpenAI()
+client = os.getenv("OPENAI_API_KEY")
 
 def call_openai(prompt: str, model: str = "gpt-3.5") -> str:
    response = client.responses.create(
