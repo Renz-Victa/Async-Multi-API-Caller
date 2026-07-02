@@ -13,44 +13,18 @@ import os
 from openai import OpenAI
 import time
 import requests
-import asyncio
-import time
 import random
 from tenacity import retry, wait_exponential, stop_after_attempt
 from rich.console import Console
 from rich.table import Table
 from rich.live import Live
-from rich.table import Table
-import panel as Panel
-import httpx
+from rich.panel import Panel
 from pydantic import BaseModel, Field
-from typing import Optional
-from google import genai
-
-class Dataset:
-  def __init__(self, data):
-    self.data = data
-
-  def predict(self, x):
-    return self.data
-  
-model = Dataset(data=2)
-result = model.predict(5)
 
 def greet(name: Optional[str]) -> str:
   if name is None:
     print("Hello, Guest!")
   print(f"Hello, {name}")
-
-class NeuralNetworks():
-  def __init__(self):
-    user = input("Check for Initialised Neural Network? y/n: ")
-    if input == "y":
-      print("Neural Networks are Initialised")
-    else:
-      print("Neural Networks are not initialised")
-
-model = NeuralNetworks()
 
 @dataclass
 class ModelConfig:
@@ -79,12 +53,16 @@ class Message:
   timestamp: str
   content: str=""
 
+client = {}
 openai = os.getenv("OPENAI_API_KEY")
 gemini = os.getenv("GEMINI_API_KEY")
-client = openai = gemini
+
+client["openai"] = openai
+client["gemini"] = gemini
 
 response = client.responses.create(
-  model=os.getenv("MODEL_NAME", "gpt-3.5")
+  openai=os.getenv("MODEL_NAME", "OPENAI_API_KEY"),
+  gemini=os.getenv("MODEL_NAME", "GEMINI_API_KEY")
 )
 
 tokens_used = response.usage.total_tokens
@@ -111,7 +89,7 @@ async def fetch_one(client: httpx.AsyncClient, api: int) -> int:
   response.raise_for_status()
   return response.text
 
-async def main():
+async def task1():
   API = {
     "openai": os.getenv("OPENAI_API_KEY"),
     "gemini": os.getenv("GEMINI_API_KEY")
@@ -122,8 +100,6 @@ async def main():
 
   for i, text in enumerate(results, start=1):
     print(f"Result {i}: {text[:80]}")
-
-asyncio.run(main())
 
 client = genai.Client()
 
@@ -143,7 +119,7 @@ async def ask_model(session: aiohttp.ClientSession, prompt: str) -> str:
     data = await response.json()
     return data["text"]
   
-async def main():
+async def task2():
   prompts = [
     "Summarise this ticket in one sentence",
     "Rewrite this paragraph more clearly"
@@ -154,8 +130,6 @@ async def main():
 
   for i, text in enumerate(results, start=1):
     print(i, text)
-
-asyncio.run(main())
 
 load_dotenv()
 
@@ -308,11 +282,9 @@ async def fetch_model_status():
       response.raise_for_students()
       return response.json()
    
-async def main():
+async def task3():
    data = await fetch_model_status()
    return data
-
-asyncio.run(main())
 
 async def call_service(client: httpx.AsyncClient, url: str):
    response = await client.get(url)
@@ -320,6 +292,9 @@ async def call_service(client: httpx.AsyncClient, url: str):
    return response.json()
 
 async def main():
+   task1()
+   task2()
+   task3()
    urls = [
       "https://api.example.com/embeddings/1",
       "https://api.example.com/embeddings/2"
@@ -394,8 +369,8 @@ def call_openai(prompt):
 
 def call_llm_api(payload, max_retries=5, base_delay=1.0, max_delay=20.0): 
    url = [
-      "https://api.example.com/v1/chat/completions",
-      "https://api.example.com/v1/chat/completions"
+      "https://api.openai.com/v1/chat/completions",
+      "https://api.gemini.com/v1/chat/completions"
    ]
    
    headers = {"Authorization": "Bearer YOUR_API_KEY"}
